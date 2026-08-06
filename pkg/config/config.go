@@ -2,6 +2,7 @@ package config
 
 import (
 	"log"
+	"log/slog"
 
 	"github.com/ilyakaznacheev/cleanenv"
 	"github.com/joho/godotenv"
@@ -28,7 +29,7 @@ type Config struct {
 func MustLoad() *Config {
 	err := godotenv.Load(".env")
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		slog.Info("Error loading .env file", "error", err)
 	}
 
 	cfg := Config{}
