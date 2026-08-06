@@ -30,3 +30,13 @@ func RequestId() gin.HandlerFunc {
 		c.Next()
 	}
 }
+
+// Хелпер для чтения request_id из контекста, возвращает "",
+//если RequestId middleware не отработал - значение по умолчанию
+
+func IDFromContext(ctx context.Context) string {
+	if v, ok := ctx.Value(requestIDKey).(string); ok {
+		return v
+	}
+	return ""
+}
