@@ -31,6 +31,8 @@ func Logger() gin.HandlerFunc {
 			path = path + "?" + query
 		}
 
+		ctx := IDFromContext(c.Request.Context())
+
 		slog.Info("http",
 			"status", status,
 			"latency", latency,
@@ -38,6 +40,8 @@ func Logger() gin.HandlerFunc {
 			"method", method,
 			"path", path,
 			"query", query,
+			"ip", clientIP,
+			"requestId", ctx,
 		)
 	}
 }
