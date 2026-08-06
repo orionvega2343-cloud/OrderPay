@@ -12,6 +12,7 @@ import (
 
 type DB struct {
 	Host     string `yaml:"host" required:"true"`
+	Name     string `yaml:"name" required:"true"`
 	Port     string `yaml:"port" required:"true"`
 	Username string `yaml:"user" required:"true"`
 	Password string `env:"DB_PASS" required:"true"`
@@ -23,7 +24,7 @@ type Config struct {
 
 //Функция подключения конфига
 
-func NewConfig() *Config {
+func MustLoad() *Config {
 	err := godotenv.Load(".env")
 	if err != nil {
 		log.Fatal("Error loading .env file")
