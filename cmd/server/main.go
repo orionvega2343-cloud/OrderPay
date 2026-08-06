@@ -33,5 +33,7 @@ func main() {
 	r.GET("/connection", postgres.HealthCheck(conn))
 
 	//TODO: пробросить порт в конфиг
-	r.Run(":8080")
+	if err := r.Run(":8080"); err != nil {
+		log.Fatal(err)
+	}
 }
