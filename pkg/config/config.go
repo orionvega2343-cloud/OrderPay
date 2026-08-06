@@ -13,7 +13,7 @@ import (
 type DB struct {
 	Host     string `yaml:"host" required:"true"`
 	Name     string `yaml:"name" required:"true"`
-	Port     string `yaml:"port" required:"true"`
+	Port     int    `yaml:"port" required:"true"`
 	Username string `yaml:"user" required:"true"`
 	Password string `env:"DB_PASS" required:"true"`
 	SslMode  string `yaml:"ssl_mode" required:"true"`
