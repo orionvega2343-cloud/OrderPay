@@ -55,7 +55,7 @@ func (t *Transactor) WithinTransaction(ctx context.Context, fn func(ctx context.
 	return err
 }
 
-func (t *Transactor) ExtractTx(ctx context.Context) (*sqlx.Tx, bool) {
+func ExtractTx(ctx context.Context) (*sqlx.Tx, bool) {
 	if v, ok := ctx.Value(txKey).(*sqlx.Tx); ok {
 		return v, true
 	}
