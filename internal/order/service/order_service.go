@@ -12,7 +12,7 @@ type OrderService interface {
 	CreateOrder(ctx context.Context, req dto.OrderRequest) (*dto.OrderResponse, error)
 	GetOrderByID(ctx context.Context, id int) (domain.Order, error)
 	GetAllOrders(ctx context.Context) ([]domain.Order, error)
-	UpdateOrder(ctx context.Context, m *domain.Order) error
+	UpdateOrder(ctx context.Context, id int, req dto.UpdateOrderStatusRequest) error
 	DeleteOrder(ctx context.Context, id int) error
 }
 
@@ -72,18 +72,18 @@ func (o *OrderServiceImpl) GetAllOrders(ctx context.Context) ([]domain.Order, er
 	return orders, nil
 }
 
-// UpdateOrder - читаем текущий заказ из БД по id (m.Id),
+// UpdateOrder - читаем текущий заказ из БД по id,
 // вызываем TransitionStatus на прочитанном заказе, передавая
-// желаемый статус (m.Status) как новый - метод сам проверяет
+// желаемый статус (req.Status) как новый - метод сам проверяет
 // допустимость перехода и меняет статус при успехе,
 // сохраняем уже изменённый заказ обратно в БД
 
-func (o *OrderServiceImpl) UpdateOrder(ctx context.Context, m *domain.Order) error {
-	order, err := o.repo.GetOrderByID(ctx, m.Id)
+func (o *OrderServiceImpl) UpdateOrder(ctx context.Context, id int, req dto.UpdateOrderStatusRequest) error {
+	order, err := o.repo.GetOrderByID(ctx, id)
 	if err != nil {
 		return err
 	}
-	err = order.TransitionStatus(m.Status)
+	err = order.TransitionStatus(req.Status)
 	if err != nil {
 		return err
 	}
