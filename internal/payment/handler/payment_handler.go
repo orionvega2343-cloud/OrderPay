@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"OrderPay/internal/payment/domain"
 	"OrderPay/internal/payment/dto"
 	"OrderPay/internal/payment/service"
 	"log/slog"
@@ -9,6 +10,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 )
+
+// domain используется только как тип ответа в swagger-аннотациях
+var _ domain.Payment
 
 type PaymentHandler interface {
 	CreatePayment(c *gin.Context)
@@ -26,6 +30,18 @@ func NewPaymentHandlerImpl(svc service.PaymentService) *PaymentHandlerImpl {
 	return &PaymentHandlerImpl{svc: svc}
 }
 
+// CreatePayment создает платеж по заказу
+// @Summary Создать платеж
+// @Description id в пути - это id заказа, платеж создается по существующему заказу в статусе created
+// @Tags payments
+// @Accept json
+// @Produce json
+// @Param id path int true "ID заказа"
+// @Param request body dto.PaymentRequest true "Данные платежа"
+// @Success 200 {object} map[string]dto.PaymentResponse
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /orders/{id}/payments [post]
 func (p *PaymentHandlerImpl) CreatePayment(c *gin.Context) {
 	id := c.Param("id")
 	parsedId, err := strconv.Atoi(id)
@@ -53,6 +69,15 @@ func (p *PaymentHandlerImpl) CreatePayment(c *gin.Context) {
 
 }
 
+// GetPaymentById возвращает платеж по id
+// @Summary Получить платеж по id
+// @Tags payments
+// @Produce json
+// @Param id path int true "ID платежа"
+// @Success 200 {object} map[string]domain.Payment
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /payments/{id} [get]
 func (p *PaymentHandlerImpl) GetPaymentById(c *gin.Context) {
 	id := c.Param("id")
 	parsedId, err := strconv.Atoi(id)
@@ -72,6 +97,13 @@ func (p *PaymentHandlerImpl) GetPaymentById(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"Payment": payment})
 }
 
+// GetAllPayments возвращает все платежи
+// @Summary Получить список платежей
+// @Tags payments
+// @Produce json
+// @Success 200 {object} map[string][]domain.Payment
+// @Failure 500 {object} map[string]string
+// @Router /payments [get]
 func (p *PaymentHandlerImpl) GetAllPayments(c *gin.Context) {
 	ctx := c.Request.Context()
 	payments, err := p.svc.GetAllPayments(ctx)
@@ -83,6 +115,17 @@ func (p *PaymentHandlerImpl) GetAllPayments(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"Payments": payments})
 }
 
+// UpdatePayment обновляет платеж
+// @Summary Обновить платеж
+// @Tags payments
+// @Accept json
+// @Produce json
+// @Param id path int true "ID платежа"
+// @Param request body dto.UpdatePaymentRequest true "Обновляемые поля"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /payments/{id} [put]
 func (p *PaymentHandlerImpl) UpdatePayment(c *gin.Context) {
 	id := c.Param("id")
 	parsedId, err := strconv.Atoi(id)
@@ -109,6 +152,15 @@ func (p *PaymentHandlerImpl) UpdatePayment(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{})
 }
 
+// DeletePayment удаляет платеж
+// @Summary Удалить платеж
+// @Tags payments
+// @Produce json
+// @Param id path int true "ID платежа"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /payments/{id} [delete]
 func (p *PaymentHandlerImpl) DeletePayment(c *gin.Context) {
 	id := c.Param("id")
 	parsedId, err := strconv.Atoi(id)

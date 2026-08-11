@@ -13,8 +13,17 @@ import (
 	"OrderPay/pkg/transaction"
 	"log"
 
+	_ "OrderPay/docs"
+
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
+
+// @title OrderPay API
+// @version 1.0
+// @description Сервис управления заказами, платежами и возвратами.
+// @BasePath /api
 
 func main() {
 	r := gin.New()
@@ -56,6 +65,7 @@ func main() {
 	r.Use(middleware.Timeout())
 	r.Use(middleware.Logger())
 	r.GET("/connection", postgres.HealthCheck(conn))
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	//Маршруты
 	api := r.Group("/api")
