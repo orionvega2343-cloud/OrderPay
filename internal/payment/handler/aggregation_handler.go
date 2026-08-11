@@ -20,6 +20,19 @@ func NewAggregationHandlerImpl(svc service.AggregationService) *AggregationHandl
 	return &AggregationHandlerImpl{svc: svc}
 }
 
+// GetPaymentTotalAmount возвращает суммарную сумму платежей по фильтру
+// @Summary Агрегация суммы платежей
+// @Description Суммирует amount платежей за период [from, to] с фильтрами по user_id и status
+// @Tags payments
+// @Produce json
+// @Param user_id query string false "ID пользователя"
+// @Param status query string false "Статус платежа"
+// @Param from query string true "Начало периода, формат 2006-01-02 15:04"
+// @Param to query string true "Конец периода, формат 2006-01-02 15:04"
+// @Success 200 {object} map[string]int
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /payments/total-amount [get]
 func (h *AggregationHandlerImpl) GetPaymentTotalAmount(c *gin.Context) {
 	ctx := c.Request.Context()
 	userId := c.Query("user_id")

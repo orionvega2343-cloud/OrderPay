@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"OrderPay/internal/order/domain"
 	"OrderPay/internal/order/dto"
 	"OrderPay/internal/order/service"
 	"net/http"
@@ -8,6 +9,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 )
+
+// domain используется только как тип ответа в swagger-аннотациях
+var _ domain.Order
 
 type OrderHandler interface {
 	PostOrder(c *gin.Context)
@@ -29,6 +33,17 @@ func NewOrderHandlerImpl(svc service.OrderService) *OrderHandlerImpl {
 // errors.Is() в хендлере, чтобы отличать ошибки валидации перехода статуса (400)
 // от внутренних ошибок сервера (500) - сейчас все ошибки уходят как 500
 
+// PostOrder создает заказ
+// @Summary Создать заказ
+// @Description Создает новый заказ со списком позиций, считает сумму и выставляет начальный статус
+// @Tags orders
+// @Accept json
+// @Produce json
+// @Param request body dto.OrderRequest true "Данные заказа"
+// @Success 200 {object} dto.OrderResponse
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /orders [post]
 func (h *OrderHandlerImpl) PostOrder(c *gin.Context) {
 	var req dto.OrderRequest
 
@@ -48,6 +63,15 @@ func (h *OrderHandlerImpl) PostOrder(c *gin.Context) {
 	c.JSON(http.StatusOK, order)
 }
 
+// GetOrderByID возвращает заказ по id
+// @Summary Получить заказ по id
+// @Tags orders
+// @Produce json
+// @Param id path int true "ID заказа"
+// @Success 200 {object} domain.Order
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /orders/{id} [get]
 func (h *OrderHandlerImpl) GetOrderByID(c *gin.Context) {
 	ctx := c.Request.Context()
 	id := c.Param("id")
@@ -65,6 +89,13 @@ func (h *OrderHandlerImpl) GetOrderByID(c *gin.Context) {
 	c.JSON(http.StatusOK, order)
 }
 
+// GetOrders возвращает все заказы
+// @Summary Получить список заказов
+// @Tags orders
+// @Produce json
+// @Success 200 {array} domain.Order
+// @Failure 500 {object} map[string]string
+// @Router /orders [get]
 func (h *OrderHandlerImpl) GetOrders(c *gin.Context) {
 	ctx := c.Request.Context()
 
@@ -76,6 +107,17 @@ func (h *OrderHandlerImpl) GetOrders(c *gin.Context) {
 	c.JSON(http.StatusOK, order)
 }
 
+// UpdateOrder обновляет статус заказа
+// @Summary Обновить статус заказа
+// @Tags orders
+// @Accept json
+// @Produce json
+// @Param id path int true "ID заказа"
+// @Param request body dto.UpdateOrderStatusRequest true "Новый статус"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /orders/{id} [patch]
 func (h *OrderHandlerImpl) UpdateOrder(c *gin.Context) {
 	id := c.Param("id")
 	parsedId, err := strconv.Atoi(id)
@@ -101,6 +143,15 @@ func (h *OrderHandlerImpl) UpdateOrder(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{})
 }
 
+// DeleteOrder удаляет заказ
+// @Summary Удалить заказ
+// @Tags orders
+// @Produce json
+// @Param id path int true "ID заказа"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /orders/{id} [delete]
 func (h *OrderHandlerImpl) DeleteOrder(c *gin.Context) {
 	ctx := c.Request.Context()
 	id := c.Param("id")

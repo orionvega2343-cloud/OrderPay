@@ -1,0 +1,588 @@
+basePath: /api
+definitions:
+  OrderPay_internal_order_domain.Order:
+    properties:
+      createdAt:
+        type: string
+      id:
+        type: integer
+      status:
+        type: string
+      totalAmount:
+        type: integer
+      updatedAt:
+        type: string
+      userId:
+        type: string
+    type: object
+  OrderPay_internal_order_dto.OrderItemRequest:
+    properties:
+      price_per_unit:
+        type: integer
+      product_name:
+        type: string
+      quantity:
+        type: integer
+    type: object
+  OrderPay_internal_order_dto.OrderItemResponse:
+    properties:
+      id:
+        type: integer
+      order_id:
+        type: integer
+      price_per_unit:
+        type: integer
+      product_name:
+        type: string
+      quantity:
+        type: integer
+    type: object
+  OrderPay_internal_order_dto.OrderRequest:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/OrderPay_internal_order_dto.OrderItemRequest'
+        type: array
+      user_id:
+        type: string
+    type: object
+  OrderPay_internal_order_dto.OrderResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      items:
+        items:
+          $ref: '#/definitions/OrderPay_internal_order_dto.OrderItemResponse'
+        type: array
+      status:
+        type: string
+      total_amount:
+        type: integer
+      updated_at:
+        type: string
+      user_id:
+        type: string
+    type: object
+  OrderPay_internal_order_dto.UpdateOrderStatusRequest:
+    properties:
+      status:
+        type: string
+    type: object
+  OrderPay_internal_payment_domain.Payment:
+    properties:
+      amount:
+        type: integer
+      createdAt:
+        type: string
+      id:
+        type: integer
+      method:
+        type: string
+      orderId:
+        type: integer
+      status:
+        type: string
+    type: object
+  OrderPay_internal_payment_domain.Refund:
+    properties:
+      amount:
+        type: integer
+      createdAt:
+        type: string
+      id:
+        type: integer
+      paymentId:
+        type: integer
+      reason:
+        type: string
+      status:
+        type: string
+    type: object
+  OrderPay_internal_payment_dto.PaymentRequest:
+    properties:
+      method:
+        type: string
+    type: object
+  OrderPay_internal_payment_dto.PaymentResponse:
+    properties:
+      amount:
+        type: integer
+      created_at:
+        type: string
+      id:
+        type: integer
+      method:
+        type: string
+      order_id:
+        type: integer
+      status:
+        type: string
+    type: object
+  OrderPay_internal_payment_dto.RefundRequest:
+    properties:
+      amount:
+        type: integer
+      reason:
+        type: string
+    type: object
+  OrderPay_internal_payment_dto.RefundResponse:
+    properties:
+      amount:
+        type: integer
+      created_at:
+        type: string
+      id:
+        type: integer
+      payment_id:
+        type: integer
+      reason:
+        type: string
+      status:
+        type: string
+    type: object
+  OrderPay_internal_payment_dto.UpdatePaymentRequest:
+    properties:
+      method:
+        type: string
+      status:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: Сервис управления заказами, платежами и возвратами.
+  title: OrderPay API
+  version: "1.0"
+paths:
+  /orders:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/OrderPay_internal_order_domain.Order'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Получить список заказов
+      tags:
+      - orders
+    post:
+      consumes:
+      - application/json
+      description: Создает новый заказ со списком позиций, считает сумму и выставляет
+        начальный статус
+      parameters:
+      - description: Данные заказа
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/OrderPay_internal_order_dto.OrderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/OrderPay_internal_order_dto.OrderResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Создать заказ
+      tags:
+      - orders
+  /orders/{id}:
+    delete:
+      parameters:
+      - description: ID заказа
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Удалить заказ
+      tags:
+      - orders
+    get:
+      parameters:
+      - description: ID заказа
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/OrderPay_internal_order_domain.Order'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Получить заказ по id
+      tags:
+      - orders
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID заказа
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Новый статус
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/OrderPay_internal_order_dto.UpdateOrderStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Обновить статус заказа
+      tags:
+      - orders
+  /orders/{id}/payments:
+    post:
+      consumes:
+      - application/json
+      description: id в пути - это id заказа, платеж создается по существующему заказу
+        в статусе created
+      parameters:
+      - description: ID заказа
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Данные платежа
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/OrderPay_internal_payment_dto.PaymentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              $ref: '#/definitions/OrderPay_internal_payment_dto.PaymentResponse'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Создать платеж
+      tags:
+      - payments
+  /payments:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              items:
+                $ref: '#/definitions/OrderPay_internal_payment_domain.Payment'
+              type: array
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Получить список платежей
+      tags:
+      - payments
+  /payments/{id}:
+    delete:
+      parameters:
+      - description: ID платежа
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Удалить платеж
+      tags:
+      - payments
+    get:
+      parameters:
+      - description: ID платежа
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              $ref: '#/definitions/OrderPay_internal_payment_domain.Payment'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Получить платеж по id
+      tags:
+      - payments
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID платежа
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Обновляемые поля
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/OrderPay_internal_payment_dto.UpdatePaymentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Обновить платеж
+      tags:
+      - payments
+  /payments/{id}/refunds:
+    post:
+      consumes:
+      - application/json
+      description: id в пути - это id платежа, по которому оформляется возврат
+      parameters:
+      - description: ID платежа
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Данные возврата
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/OrderPay_internal_payment_dto.RefundRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              $ref: '#/definitions/OrderPay_internal_payment_dto.RefundResponse'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Создать возврат
+      tags:
+      - refunds
+  /payments/total-amount:
+    get:
+      description: Суммирует amount платежей за период [from, to] с фильтрами по user_id
+        и status
+      parameters:
+      - description: ID пользователя
+        in: query
+        name: user_id
+        type: string
+      - description: Статус платежа
+        in: query
+        name: status
+        type: string
+      - description: Начало периода, формат 2006-01-02 15:04
+        in: query
+        name: from
+        required: true
+        type: string
+      - description: Конец периода, формат 2006-01-02 15:04
+        in: query
+        name: to
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: integer
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Агрегация суммы платежей
+      tags:
+      - payments
+  /refunds:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              items:
+                $ref: '#/definitions/OrderPay_internal_payment_domain.Refund'
+              type: array
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Получить список возвратов
+      tags:
+      - refunds
+swagger: "2.0"
