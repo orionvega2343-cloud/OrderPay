@@ -5,6 +5,7 @@ import (
 	"OrderPay/pkg/transaction"
 	"context"
 	"log/slog"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -15,6 +16,7 @@ type PaymentRepo interface {
 	GetAllPayments(ctx context.Context) ([]domain.Payment, error)
 	UpdatePayment(ctx context.Context, m *domain.Payment) error
 	DeletePayment(ctx context.Context, id int) error
+	GetPaymentTotalAmount(ctx context.Context, userId, status string, to, from time.Time) (int, error)
 }
 
 type PaymentRepoImpl struct {
@@ -97,4 +99,15 @@ func (r *PaymentRepoImpl) DeletePayment(ctx context.Context, id int) error {
 		return err
 	}
 	return nil
+}
+
+func (r *PaymentRepoImpl) GetPaymentTotalAmount(ctx context.Context, userId, status string, to, from time.Time) (int, error) {
+	query := `SELECT COALESCE(SUM(amount), 0) FROM payments JOIN orders ON(payments.order_id = orders.id) WHERE orders.user_id = $1 AND payments.status = $2 AND payments.created_at BETWEEN $3 AND $4`
+	var total int
+	err := r.db.GetContext(ctx, &total, query, userId, status, from, to)
+	if err != nil {
+		slog.Error("Failed to get total amount of payments", "error", err)
+		return 0, err
+	}
+	return total, nil
 }
