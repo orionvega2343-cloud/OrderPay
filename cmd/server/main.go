@@ -8,15 +8,19 @@ import (
 	paymentRepos "OrderPay/internal/payment/repository"
 	paymentService "OrderPay/internal/payment/service"
 	"OrderPay/pkg/config"
+	"OrderPay/pkg/logger"
 	"OrderPay/pkg/middleware"
 	"OrderPay/pkg/postgres"
 	"OrderPay/pkg/transaction"
 	"log"
+	"log/slog"
 
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
+	//Структурированный JSON лог
+	slog.SetDefault(logger.NewLogger())
 	r := gin.New()
 	//Вызываем конфиг и бд
 	cfg := config.MustLoad()
