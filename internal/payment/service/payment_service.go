@@ -15,7 +15,7 @@ type PaymentService interface {
 	CreatePayment(ctx context.Context, orderId int, req dto.PaymentRequest) (dto.PaymentResponse, error)
 	GetPaymentById(ctx context.Context, id int) (*domain.Payment, error)
 	GetAllPayments(ctx context.Context) ([]domain.Payment, error)
-	UpdatePayment(ctx context.Context, req *dto.UpdatePaymentRequest) error
+	UpdatePayment(ctx context.Context, id int, req *dto.UpdatePaymentRequest) error
 	DeletePayment(ctx context.Context, id int) error
 }
 
