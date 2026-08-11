@@ -1,0 +1,6 @@
+db:
+  host: db
+  port: 5432
+  name: orderpay
+  user: postgres
+  ssl_mode: disable
