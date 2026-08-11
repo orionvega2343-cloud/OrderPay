@@ -4,3 +4,5 @@ db:
   name: orderpay
   user: postgres
   ssl_mode: disable
+server:
+  port: "8080"

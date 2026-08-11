@@ -20,8 +20,13 @@ type DB struct {
 	SslMode  string `yaml:"ssl_mode" required:"true"`
 }
 
+type Server struct {
+	Port string `yaml:"port" env-default:"8080"`
+}
+
 type Config struct {
-	DB DB `yaml:"db"`
+	DB     DB     `yaml:"db"`
+	Server Server `yaml:"server"`
 }
 
 //Функция подключения конфига

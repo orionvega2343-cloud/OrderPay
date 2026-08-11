@@ -89,8 +89,7 @@ func main() {
 		refunds.GET("", refundHndlr.GetAllRefund)
 	}
 
-	//TODO: пробросить порт в конфиг
-	if err := r.Run(":8080"); err != nil {
+	if err := r.Run(":" + cfg.Server.Port); err != nil {
 		log.Fatal(err)
 	}
 }
