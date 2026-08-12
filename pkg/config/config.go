@@ -3,6 +3,7 @@ package config
 import (
 	"log"
 	"log/slog"
+	"time"
 
 	"github.com/ilyakaznacheev/cleanenv"
 	"github.com/joho/godotenv"
@@ -21,7 +22,8 @@ type DB struct {
 }
 
 type Server struct {
-	Port string `yaml:"port" env-default:"8080"`
+	Port    string        `yaml:"port" env-default:"8080"`
+	Timeout time.Duration `yaml:"timeout" env-default:"10s"`
 }
 
 type Config struct {

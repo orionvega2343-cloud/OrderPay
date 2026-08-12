@@ -6,3 +6,4 @@ db:
   ssl_mode: disable
 server:
   port: "8080"
+  timeout: 10s
