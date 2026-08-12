@@ -31,10 +31,6 @@ func NewOrderHandlerImpl(svc service.OrderService) *OrderHandlerImpl {
 	return &OrderHandlerImpl{svc: svc}
 }
 
-// TODO: sentinel errors (например, ErrInvalidTransition в domain-пакете) +
-// errors.Is() в хендлере, чтобы отличать ошибки валидации перехода статуса (400)
-// от внутренних ошибок сервера (500) - сейчас все ошибки уходят как 500
-
 // PostOrder создает заказ
 // @Summary Создать заказ
 // @Description Создает новый заказ со списком позиций, считает сумму и выставляет начальный статус
