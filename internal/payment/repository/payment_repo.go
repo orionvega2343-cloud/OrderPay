@@ -2,9 +2,9 @@ package repository
 
 import (
 	"OrderPay/internal/payment/domain"
+	"OrderPay/pkg/querier"
 	"OrderPay/pkg/transaction"
 	"context"
-	"database/sql"
 	"log/slog"
 	"time"
 
@@ -20,10 +20,6 @@ type PaymentRepo interface {
 	GetPaymentTotalAmount(ctx context.Context, userId, status string, from, to time.Time) (int, error)
 }
 
-type Querier interface {
-	GetContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error
-	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
-}
 type PaymentRepoImpl struct {
 	db *sqlx.DB
 }
@@ -35,7 +31,7 @@ func NewPaymentRepo(db *sqlx.DB) *PaymentRepoImpl {
 func (r *PaymentRepoImpl) CreatePayment(ctx context.Context, m *domain.Payment) (*domain.Payment, error) {
 	//Получаем значение из контекста
 	//и проверяем с помощью assertion type
-	var q Querier
+	var q querier.Querier
 	tx, ok := transaction.ExtractTx(ctx)
 	query := `INSERT INTO payments(order_id, amount, status, method) VALUES($1, $2, $3, $4) RETURNING id`
 	if ok {
@@ -75,7 +71,7 @@ func (r *PaymentRepoImpl) GetAllPayments(ctx context.Context) ([]domain.Payment,
 
 func (r *PaymentRepoImpl) UpdatePayment(ctx context.Context, m *domain.Payment) error {
 	tx, ok := transaction.ExtractTx(ctx)
-	var q Querier
+	var q querier.Querier
 	query := `UPDATE payments SET status = $1, method = $2 WHERE id = $3`
 	if ok {
 		q = tx
