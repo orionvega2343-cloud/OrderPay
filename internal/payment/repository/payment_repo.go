@@ -4,6 +4,7 @@ import (
 	"OrderPay/internal/payment/domain"
 	"OrderPay/pkg/transaction"
 	"context"
+	"database/sql"
 	"log/slog"
 	"time"
 
@@ -19,6 +20,10 @@ type PaymentRepo interface {
 	GetPaymentTotalAmount(ctx context.Context, userId, status string, from, to time.Time) (int, error)
 }
 
+type Querier interface {
+	GetContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error
+	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
+}
 type PaymentRepoImpl struct {
 	db *sqlx.DB
 }
@@ -30,21 +35,18 @@ func NewPaymentRepo(db *sqlx.DB) *PaymentRepoImpl {
 func (r *PaymentRepoImpl) CreatePayment(ctx context.Context, m *domain.Payment) (*domain.Payment, error) {
 	//Получаем значение из контекста
 	//и проверяем с помощью assertion type
-	//TODO: убрать дублирование
+	var q Querier
 	tx, ok := transaction.ExtractTx(ctx)
 	query := `INSERT INTO payments(order_id, amount, status, method) VALUES($1, $2, $3, $4) RETURNING id`
 	if ok {
-		err := tx.GetContext(ctx, &m.Id, query, m.OrderId, m.Amount, m.Status, m.Method)
-		if err != nil {
-			slog.Error("Failed to create payment", "error", err)
-			return nil, err
-		}
+		q = tx
 	} else {
-		err := r.db.GetContext(ctx, &m.Id, query, m.OrderId, m.Amount, m.Status, m.Method)
-		if err != nil {
-			slog.Error("Error while inserting new payment", "error", err)
-			return nil, err
-		}
+		q = r.db
+	}
+	err := q.GetContext(ctx, &m.Id, query, m.OrderId, m.Amount, m.Status, m.Method)
+	if err != nil {
+		slog.Error("Failed to create payment", "error", err)
+		return nil, err
 	}
 	return m, nil
 }
@@ -73,20 +75,17 @@ func (r *PaymentRepoImpl) GetAllPayments(ctx context.Context) ([]domain.Payment,
 
 func (r *PaymentRepoImpl) UpdatePayment(ctx context.Context, m *domain.Payment) error {
 	tx, ok := transaction.ExtractTx(ctx)
-	//TODO: убрать дублирование
+	var q Querier
 	query := `UPDATE payments SET status = $1, method = $2 WHERE id = $3`
 	if ok {
-		_, err := tx.ExecContext(ctx, query, m.Status, m.Method, m.Id)
-		if err != nil {
-			slog.Error("Failed to update payment", "error", err)
-			return err
-		}
+		q = tx
 	} else {
-		_, err := r.db.ExecContext(ctx, query, m.Status, m.Method, m.Id)
-		if err != nil {
-			slog.Error("Failed to update payment", "error", err)
-			return err
-		}
+		q = r.db
+	}
+	_, err := q.ExecContext(ctx, query, m.Status, m.Method, m.Id)
+	if err != nil {
+		slog.Error("Failed to update payment", "error", err)
+		return err
 	}
 	return nil
 }
