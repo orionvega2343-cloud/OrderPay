@@ -6,6 +6,7 @@ import (
 	"OrderPay/internal/order/repository"
 	"OrderPay/pkg/transaction"
 	"context"
+	"log/slog"
 )
 
 type OrderService interface {
@@ -46,19 +47,25 @@ func (o *OrderServiceImpl) CreateOrder(ctx context.Context, req dto.OrderRequest
 
 	err := o.transactor.WithinTransaction(ctx, func(ctxTx context.Context) error {
 		_, err := o.repo.CreateOrder(ctxTx, &m, items)
+		slog.Error("failed creating order", "error", err)
 		return err
 	})
 	if err != nil {
+		slog.Error("failed check for other errors", "error", err)
 		return nil, err
 	}
-	// TODO: вернуть id каждого OrderItem через RETURNING id в queryItems,
 	// TODO: затем добавить конвертацию items → []dto.OrderItemResponse в Service.Create
-	return &dto.OrderResponse{Id: m.Id, UserId: m.UserId, Status: m.Status, TotalAmount: m.TotalAmount}, nil
+	var responseItems []dto.OrderItemResponse
+	for _, item := range items {
+		responseItems = append(responseItems, dto.OrderItemResponse{Id: item.Id, OrderId: item.OrderId, ProductName: item.ProductName, Quantity: item.Quantity, PricePerUnit: item.PricePerUnit})
+	}
+	return &dto.OrderResponse{Id: m.Id, UserId: m.UserId, Status: m.Status, TotalAmount: m.TotalAmount, Items: responseItems}, nil
 }
 
 func (o *OrderServiceImpl) GetOrderByID(ctx context.Context, id int) (domain.Order, error) {
 	order, err := o.repo.GetOrderByID(ctx, id)
 	if err != nil {
+		slog.Error("failed getting order", "error", err)
 		return domain.Order{}, err
 	}
 	return order, nil
@@ -67,6 +74,7 @@ func (o *OrderServiceImpl) GetOrderByID(ctx context.Context, id int) (domain.Ord
 func (o *OrderServiceImpl) GetAllOrders(ctx context.Context) ([]domain.Order, error) {
 	orders, err := o.repo.GetAllOrders(ctx)
 	if err != nil {
+		slog.Error("failed getting all orders", "error", err)
 		return nil, err
 	}
 	return orders, nil
@@ -81,14 +89,17 @@ func (o *OrderServiceImpl) GetAllOrders(ctx context.Context) ([]domain.Order, er
 func (o *OrderServiceImpl) UpdateOrder(ctx context.Context, id int, req dto.UpdateOrderStatusRequest) error {
 	order, err := o.repo.GetOrderByID(ctx, id)
 	if err != nil {
+		slog.Error("failed getting order", "error", err)
 		return err
 	}
 	err = order.TransitionStatus(req.Status)
 	if err != nil {
+		slog.Error("failed transitioning status", "error", err)
 		return err
 	}
 	err = o.repo.UpdateOrder(ctx, &order)
 	if err != nil {
+		slog.Error("failed updating order", "error", err)
 		return err
 	}
 	return nil
@@ -97,6 +108,7 @@ func (o *OrderServiceImpl) UpdateOrder(ctx context.Context, id int, req dto.Upda
 func (o *OrderServiceImpl) DeleteOrder(ctx context.Context, id int) error {
 	err := o.repo.DeleteOrder(ctx, id)
 	if err != nil {
+		slog.Error("failed delete order", "error", err)
 		return err
 	}
 	return nil
