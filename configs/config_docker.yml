@@ -1,5 +1,5 @@
 db:
-  host: localhost
+  host: db
   port: 5432
   name: orderpay
   user: postgres

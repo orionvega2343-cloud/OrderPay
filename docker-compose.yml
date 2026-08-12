@@ -16,5 +16,25 @@ services:
         timeout: 5s
         retries: 5
 
+  app:
+    build:
+      context: .
+      dockerfile: deployments/Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./configs/config_docker.yml:/app/config/config.yml:ro
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+        test: [ "CMD-SHELL", "wget -qO- http://localhost:8080/connection || exit 1" ]
+        interval: 10s
+        timeout: 5s
+        retries: 5
+
 volumes:
   db_data:
