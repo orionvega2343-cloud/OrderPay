@@ -85,7 +85,7 @@ func (r *OrderRepoImpl) GetAllOrders(ctx context.Context) ([]domain.Order, error
 }
 
 func (r *OrderRepoImpl) UpdateOrder(ctx context.Context, m *domain.Order) error {
-	var q Querier()
+	var q Querier
 	tx, ok := transaction.ExtractTx(ctx)
 	query := `UPDATE orders SET status = $1, updated_at = NOW() WHERE id = $2`
 	if ok {
