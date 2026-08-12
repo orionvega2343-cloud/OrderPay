@@ -54,7 +54,7 @@ func (o *OrderServiceImpl) CreateOrder(ctx context.Context, req dto.OrderRequest
 		slog.Error("failed check for other errors", "error", err)
 		return nil, err
 	}
-	// TODO: затем добавить конвертацию items → []dto.OrderItemResponse в Service.Create
+
 	var responseItems []dto.OrderItemResponse
 	for _, item := range items {
 		responseItems = append(responseItems, dto.OrderItemResponse{Id: item.Id, OrderId: item.OrderId, ProductName: item.ProductName, Quantity: item.Quantity, PricePerUnit: item.PricePerUnit})
