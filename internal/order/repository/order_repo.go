@@ -67,6 +67,7 @@ func (r *OrderRepoImpl) GetOrderByID(ctx context.Context, id int) (domain.Order,
 	query := `SELECT id, user_id, status, total_amount, created_at, updated_at FROM orders WHERE id = $1`
 	err := r.db.GetContext(ctx, &m, query, id)
 	if err != nil {
+		slog.Error("failed getting order", "error", err)
 		return m, err
 	}
 	return m, nil
@@ -77,24 +78,25 @@ func (r *OrderRepoImpl) GetAllOrders(ctx context.Context) ([]domain.Order, error
 	query := `SELECT id, user_id, status, total_amount, created_at, updated_at FROM orders`
 	err := r.db.SelectContext(ctx, &m, query)
 	if err != nil {
+		slog.Error("failed getting all orders", "error", err)
 		return m, err
 	}
 	return m, nil
 }
 
 func (r *OrderRepoImpl) UpdateOrder(ctx context.Context, m *domain.Order) error {
+	var q Querier()
 	tx, ok := transaction.ExtractTx(ctx)
 	query := `UPDATE orders SET status = $1, updated_at = NOW() WHERE id = $2`
 	if ok {
-		_, err := tx.ExecContext(ctx, query, m.Status, m.Id)
-		if err != nil {
-			return err
-		}
+		q = tx
 	} else {
-		_, err := r.db.ExecContext(ctx, query, m.Status, m.Id)
-		if err != nil {
-			return err
-		}
+		q = r.db
+	}
+	_, err := q.ExecContext(ctx, query, m.Status, m.Id)
+	if err != nil {
+		slog.Error("failed updating order", "error", err)
+		return err
 	}
 	return nil
 }
@@ -103,6 +105,7 @@ func (r *OrderRepoImpl) DeleteOrder(ctx context.Context, id int) error {
 	query := `DELETE FROM orders WHERE id = $1`
 	_, err := r.db.ExecContext(ctx, query, id)
 	if err != nil {
+		slog.Error("failed deleting order", "error", err)
 		return err
 	}
 	return nil
