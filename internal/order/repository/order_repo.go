@@ -2,9 +2,9 @@ package repository
 
 import (
 	"OrderPay/internal/order/domain"
+	"OrderPay/pkg/querier"
 	"OrderPay/pkg/transaction"
 	"context"
-	"database/sql"
 	"log/slog"
 
 	"github.com/jmoiron/sqlx"
@@ -16,13 +16,6 @@ type OrderRepo interface {
 	GetAllOrders(ctx context.Context) ([]domain.Order, error)
 	UpdateOrder(ctx context.Context, m *domain.Order) error
 	DeleteOrder(ctx context.Context, id int) error
-}
-
-// Querier - отдельный интерфейс,
-// для устранения дублирования кода внутри CreateOrder
-type Querier interface {
-	GetContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error
-	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
 }
 
 type OrderRepoImpl struct {
@@ -38,7 +31,7 @@ func NewOrderRepo(db *sqlx.DB) *OrderRepoImpl {
 //иначе через r.db
 
 func (r *OrderRepoImpl) CreateOrder(ctx context.Context, m *domain.Order, items []domain.OrderItem) (*domain.Order, error) {
-	var q Querier
+	var q querier.Querier
 	tx, ok := transaction.ExtractTx(ctx)
 	query := `INSERT INTO orders(user_id, status, total_amount) VALUES($1, $2, $3) RETURNING id`
 	queryItems := `INSERT INTO order_items(order_id, product_name, quantity, price_per_unit) VALUES($1, $2, $3, $4) RETURNING id`
@@ -85,7 +78,7 @@ func (r *OrderRepoImpl) GetAllOrders(ctx context.Context) ([]domain.Order, error
 }
 
 func (r *OrderRepoImpl) UpdateOrder(ctx context.Context, m *domain.Order) error {
-	var q Querier
+	var q querier.Querier
 	tx, ok := transaction.ExtractTx(ctx)
 	query := `UPDATE orders SET status = $1, updated_at = NOW() WHERE id = $2`
 	if ok {
