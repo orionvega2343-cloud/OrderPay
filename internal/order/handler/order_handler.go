@@ -2,8 +2,10 @@ package handler
 
 import (
 	"OrderPay/internal/order/domain"
+	"OrderPay/internal/order/domain/errs"
 	"OrderPay/internal/order/dto"
 	"OrderPay/internal/order/service"
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -136,6 +138,10 @@ func (h *OrderHandlerImpl) UpdateOrder(c *gin.Context) {
 	ctx := c.Request.Context()
 
 	err = h.svc.UpdateOrder(ctx, parsedId, req)
+	if errors.Is(err, errs.ErrInvalidTransition) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
