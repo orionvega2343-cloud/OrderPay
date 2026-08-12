@@ -7,10 +7,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Timeout() gin.HandlerFunc {
+func Timeout(d time.Duration) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		//TODO: пробросить динамечское время из конфига
-		ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+		ctx, cancel := context.WithTimeout(c.Request.Context(), d)
 		defer cancel()
 
 		c.Request = c.Request.WithContext(ctx)

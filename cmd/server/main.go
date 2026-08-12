@@ -66,7 +66,7 @@ func main() {
 	//чтобы ловить панику нижних методов/сервисов
 	r.Use(middleware.Recovery())
 	r.Use(middleware.RequestId())
-	r.Use(middleware.Timeout())
+	r.Use(middleware.Timeout(cfg.Server.Timeout))
 	r.Use(middleware.Logger())
 	r.GET("/connection", postgres.HealthCheck(conn))
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
