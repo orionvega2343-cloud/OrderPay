@@ -53,7 +53,7 @@ func (r *OrderRepoImpl) CreateOrder(ctx context.Context, m *domain.Order, items 
 		return nil, err
 	}
 	for _, item := range items {
-		err = q.GetContext(ctx, &item, queryItems, m.Id, item.ProductName, item.Quantity, item.PricePerUnit)
+		err = q.GetContext(ctx, &item.Id, queryItems, m.Id, item.ProductName, item.Quantity, item.PricePerUnit)
 		if err != nil {
 			return nil, err
 		}
