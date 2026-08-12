@@ -1,8 +1,7 @@
 package domain
 
 import (
-	"errors"
-	"fmt"
+	"OrderPay/internal/order/domain/errs"
 	"time"
 )
 
@@ -22,19 +21,19 @@ func (o *Order) TransitionStatus(next string) error {
 		case "cancelled", "paid":
 			o.Status = next
 		default:
-			return fmt.Errorf("invalid order status %s", next)
+			return errs.ErrInvalidTransition
 		}
 	case "paid":
 		switch next {
 		case "completed", "cancelled":
 			o.Status = next
 		default:
-			return fmt.Errorf("invalid order status %s", next)
+			return errs.ErrInvalidTransition
 		}
 	case "cancelled", "completed":
-		return errors.New("transition denied")
+		return errs.ErrInvalidTransition
 	default:
-		return errors.New("Invalid status")
+		return errs.ErrInvalidTransition
 	}
 	return nil
 }
