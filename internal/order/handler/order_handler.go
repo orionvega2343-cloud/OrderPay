@@ -2,8 +2,10 @@ package handler
 
 import (
 	"OrderPay/internal/order/domain"
+	"OrderPay/internal/order/domain/errs"
 	"OrderPay/internal/order/dto"
 	"OrderPay/internal/order/service"
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -28,10 +30,6 @@ type OrderHandlerImpl struct {
 func NewOrderHandlerImpl(svc service.OrderService) *OrderHandlerImpl {
 	return &OrderHandlerImpl{svc: svc}
 }
-
-// TODO: sentinel errors (например, ErrInvalidTransition в domain-пакете) +
-// errors.Is() в хендлере, чтобы отличать ошибки валидации перехода статуса (400)
-// от внутренних ошибок сервера (500) - сейчас все ошибки уходят как 500
 
 // PostOrder создает заказ
 // @Summary Создать заказ
@@ -136,6 +134,10 @@ func (h *OrderHandlerImpl) UpdateOrder(c *gin.Context) {
 	ctx := c.Request.Context()
 
 	err = h.svc.UpdateOrder(ctx, parsedId, req)
+	if errors.Is(err, errs.ErrInvalidTransition) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
