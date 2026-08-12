@@ -39,7 +39,7 @@ func MustLoad() *Config {
 
 	cfg := Config{}
 
-	err = cleanenv.ReadConfig("config/config.yml", &cfg)
+	err = cleanenv.ReadConfig("configs/config_dev.yml", &cfg)
 	if err != nil {
 		log.Fatal("Error loading config")
 	}
