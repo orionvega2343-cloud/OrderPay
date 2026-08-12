@@ -4,6 +4,8 @@ import (
 	"OrderPay/internal/order/domain"
 	"OrderPay/pkg/transaction"
 	"context"
+	"database/sql"
+	"log/slog"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -14,6 +16,13 @@ type OrderRepo interface {
 	GetAllOrders(ctx context.Context) ([]domain.Order, error)
 	UpdateOrder(ctx context.Context, m *domain.Order) error
 	DeleteOrder(ctx context.Context, id int) error
+}
+
+// Querier - отдельный интерфейс,
+// для устранения дублирования кода внутри CreateOrder
+type Querier interface {
+	GetContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error
+	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
 }
 
 type OrderRepoImpl struct {
@@ -29,32 +38,24 @@ func NewOrderRepo(db *sqlx.DB) *OrderRepoImpl {
 //иначе через r.db
 
 func (r *OrderRepoImpl) CreateOrder(ctx context.Context, m *domain.Order, items []domain.OrderItem) (*domain.Order, error) {
+	var q Querier
 	tx, ok := transaction.ExtractTx(ctx)
-
-	//TODO: устранить дублирование вынеся методы в отдельный интерфейс
 	query := `INSERT INTO orders(user_id, status, total_amount) VALUES($1, $2, $3) RETURNING id`
 	queryItems := `INSERT INTO order_items(order_id, product_name, quantity, price_per_unit) VALUES($1, $2, $3, $4) RETURNING id`
 	if ok {
-		err := tx.GetContext(ctx, &m.Id, query, m.UserId, m.Status, m.TotalAmount)
-		if err != nil {
-			return nil, err
-		}
-		for _, item := range items {
-			err = tx.GetContext(ctx, &item, queryItems, m.Id, item.ProductName, item.Quantity, item.PricePerUnit)
-			if err != nil {
-				return nil, err
-			}
-		}
+		q = tx
 	} else {
-		err := r.db.GetContext(ctx, &m.Id, query, m.UserId, m.Status, m.TotalAmount)
+		q = r.db
+	}
+	err := q.GetContext(ctx, &m.Id, query, m.UserId, m.Status, m.TotalAmount)
+	if err != nil {
+		slog.Error("failed inserting order", "error", err)
+		return nil, err
+	}
+	for _, item := range items {
+		err = q.GetContext(ctx, &item, queryItems, m.Id, item.ProductName, item.Quantity, item.PricePerUnit)
 		if err != nil {
 			return nil, err
-		}
-		for _, item := range items {
-			err = r.db.GetContext(ctx, &item, queryItems, m.Id, item.ProductName, item.Quantity, item.PricePerUnit)
-			if err != nil {
-				return nil, err
-			}
 		}
 	}
 	return m, nil
